@@ -51,11 +51,11 @@ class GetStats(Resource):
         * N° de notificaciones
         """
         try:
-            n_clientes = Clientes.query.all.count()
-            n_servicios = Servicios.query.all.count()
+            n_clientes = Clientes.query.count()
+            n_servicios = Servicios.query.count()
             n_notificaciones = Planillas.query.filter(
                 Planillas.pagado == False
-            ).all.count()
+            ).count()
             return {
                 'success':{
                     'clientes':n_clientes,
@@ -63,7 +63,7 @@ class GetStats(Resource):
                     'notificaciones':n_notificaciones
                 }
             },200
-        except:
+        except Exception:
             abort(400, error='No fue posible obtener las estadisticas')
 
 
