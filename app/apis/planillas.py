@@ -220,6 +220,7 @@ class NewPlanilla(Resource):
                 raise Exception('Error en las lecturas. Lectura actual es menor a la lectura anterior')
             # Verificar que no se haya emitido una planilla de este mes para ese servicio
             planilla = Planillas.query.filter(
+                Planillas.id_servicio == servicio.id,
                 extract('month',Planillas.fecha_emision) == fecha_emision.month,
                 extract('year', Planillas.fecha_emision) == fecha_emision.year
             ).first()
