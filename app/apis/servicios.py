@@ -1,20 +1,104 @@
 from flask_restx import Namespace,Resource,fields,abort
 from flask_login import login_required
+from sqlalchemy import extract
 from app.libs import db
 from app.common.api_utils import (
     success_message,
     error_message,
     item_servicio,
+    item_cliente,
     nullable,
     is_not_null_empty
 )
-from app.models import Clientes,Servicios
+from app.models import Clientes,Servicios,Planillas
+from datetime import datetime
 
 
 api = Namespace('Servicios', description='Endpoints para la gestión de servicios')
 
 
 # ----------------------------------- GET -----------------------------------------
+@api.route('/get/all')
+class GetAllServicios(Resource):
+    item_estado_servicio = api.model('Estado de pago servicio', {
+        'id':fields.Integer(
+            readonly=True,
+            title = 'ID',
+            description='Id del servicio'
+        ),
+        'cliente':fields.Nested(item_cliente),
+        'n_conexion':fields.Integer(
+            readonly=True,
+            title = 'Numero de conexion',
+            description='Número de conexión de servicio'
+        ),
+        'n_medidor':fields.Integer(
+            readonly=True,
+            title = 'Numero de medidor',
+            description='Número del medidor del servicio'
+        ),
+        'direccion':fields.String(
+            readonly=True,
+            title = 'Direccion del servicio',
+            description='Dirección de instalación del servicio'
+        ),
+        'estado':fields.Boolean(
+            readonly=True,
+            title = 'Estado de servicio',
+            description='Estado del servicio (Activo/Suspendido)'
+        ),
+        'lectura_anterior':fields.Integer(
+            readonly=True,
+            title = 'Lectura anterior medidor',
+            description='Lectura anterior del medidor de servicio'
+        ),
+        'mes_actual_pagado':fields.Boolean(
+            readonly = True,
+            title = 'Estado de verificación de pago',
+            description = 'Estado de verificación de pago de planilla del servicio en el mes actual'
+        )
+    })
+
+    estado_servicios = api.model('Todos los servicios', {
+        'success':fields.List(fields.Nested(item_estado_servicio))
+    })
+
+    @api.response(200, 'OK', estado_servicios)
+    @api.response(400, 'Bad Request', error_message)
+    @login_required
+    def get(self):
+        try:
+            servicios = Servicios.query.all()
+            results = []
+            current_date = datetime.now()
+            for servicio in servicios:
+                planillas = Planillas.query.filter(
+                    Planillas.id_servicio == servicio.id,
+                    extract('month',Planillas.fecha_emision) == current_date.month,
+                    extract('year', Planillas.fecha_emision) == current_date.year
+                ).count()
+                pagado = True if planillas > 0 else False
+                results.append({
+                    'id':servicio.id,
+                    'cliente':{
+                        'id':servicio.cliente.id,
+                        'cedula':servicio.cliente.cedula,
+                        'nombres':servicio.cliente.nombres,
+                        'apellidos':servicio.cliente.apellidos,
+                        'telefono':servicio.cliente.telefono
+                    },
+                    'n_conexion':servicio.n_conexion,
+                    'n_medidor':servicio.n_medidor,
+                    'direccion':servicio.direccion,
+                    'estado':servicio.estado,
+                    'lectura_anterior':servicio.lectura_anterior,
+                    'mes_actual_pagado':pagado
+                })
+            return {'success':results},200
+        except Exception:
+            abort(400, error='No fue posible obtener los registros')
+
+
 @api.route('/get/all/<int:id_cliente>')
 class GetServiciosCliente(Resource):
     lista_servicios = api.model('Lista de servicios', {
