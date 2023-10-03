@@ -52,7 +52,7 @@ class GetAllServicios(Resource):
             title = 'Lectura anterior medidor',
             description='Lectura anterior del medidor de servicio'
         ),
-        'mes_actual_pagado':fields.Boolean(
+        'planilla_actual_emitida':fields.Boolean(
             readonly = True,
             title = 'Estado de verificación de pago',
             description = 'Estado de verificación de pago de planilla del servicio en el mes actual'
@@ -77,7 +77,7 @@ class GetAllServicios(Resource):
                     extract('month',Planillas.fecha_emision) == current_date.month,
                     extract('year', Planillas.fecha_emision) == current_date.year
                 ).count()
-                pagado = True if planillas > 0 else False
+                emitido = True if planillas > 0 else False
                 results.append({
                     'id':servicio.id,
                     'cliente':{
@@ -92,7 +92,7 @@ class GetAllServicios(Resource):
                     'direccion':servicio.direccion,
                     'estado':servicio.estado,
                     'lectura_anterior':servicio.lectura_anterior,
-                    'mes_actual_pagado':pagado
+                    'planilla_actual_emitida':emitido
                 })
             return {'success':results},200
         except Exception:
