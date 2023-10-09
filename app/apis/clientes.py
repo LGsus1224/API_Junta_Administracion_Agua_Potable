@@ -1,5 +1,5 @@
 from flask_restx import Namespace,Resource,fields,abort
-from flask_login import login_required
+from flask_login import login_required,current_user
 from app.libs import db
 from app.common.api_utils import (
     success_message,
@@ -8,6 +8,8 @@ from app.common.api_utils import (
     nullable,
     is_not_null_empty
 )
+from app.common.logs import LogsServices
+from app.common.enums import logsCategories
 from app.models import Clientes
 
 
@@ -79,7 +81,7 @@ class GetCliente(Resource):
             abort(400, error='No fue posible obtener la información del cliente: ' + str(e))
 
 
-# ----------------------------------------- NEW -----------------------------------
+# ----------------------------------------- POST -----------------------------------
 @api.route('/new')
 class NewCliente(Resource):
     new_cliente = api.model('Nuevo cliente',{
@@ -132,13 +134,14 @@ class NewCliente(Resource):
             new_cliente.apellidos = ' '.join(str(apellidos).strip().title().split())
             new_cliente.telefono = telefono
             db.session.add(new_cliente)
+            LogsServices(db.session).new_log(logsCategories.cliente_created, current_user.id)
             db.session.commit()
             return {
                 'success':'Cliente registrado'
             },201
-        except Exception:
+        except Exception as e:
             db.session.rollback()
-            abort(400, error='No fue posible registrar el cliente')
+            abort(400, error='No fue posible registrar el cliente' + str(e))
 
 
 # ------------------------------------- UPDATE ------------------------------------
@@ -232,6 +235,7 @@ class DeleteCliente(Resource):
             if cliente is None: raise Exception('No se encontro al cliente')
             db.session.delete(cliente)
             db.session.commit()
+            LogsServices(db.session).new_log(logsCategories.cliente_deleted, current_user.id)
             return {
                 'success':'Cliente eliminado'
             },200

@@ -11,7 +11,7 @@ from app.common.api_utils import (
 from datetime import datetime
 
 
-api = Namespace('Configuración', description='Endpoints relacionados con la configuracion de vlaores por defecto')
+api = Namespace('Configuración', description='Endpoints relacionados con la configuracion de valores por defecto')
 
 
 # --------------------------------------- GET -----------------------------------------
@@ -37,6 +37,11 @@ class GetDefault(Resource):
             readonly = True,
             title = 'Valor exedente',
             description = 'Precio default por cada exedente'
+        ),
+        'reconexion':fields.Float(
+            readonly = True,
+            title = 'Reconexión de servicio',
+            description = 'Precio a pagar por reconexión de servicio'
         )
     })
 
@@ -62,7 +67,8 @@ class GetDefault(Resource):
                     'consumo_base':configuracion.consumo_base,
                     'exedente':configuracion.exedente,
                     'valor_consumo_base':configuracion.valor_consumo_base,
-                    'valor_exedente':configuracion.valor_exedente
+                    'valor_exedente':configuracion.valor_exedente,
+                    'reconexion':configuracion.reconexion
                 }
             },200
         except Exception as e:
@@ -96,6 +102,12 @@ class UpdateConfiguracion(Resource):
             required = True,
             title = 'Valor exedente (Opcional)',
             description = 'Precio default por cada exedente'
+        ),
+        'reconexion':nullable(
+            fields.Float,
+            required = True,
+            title = 'Valor por reconexion (Opcional)',
+            description = 'Precio a pagar por reconexion del servicio'
         )
     })
 
@@ -119,6 +131,7 @@ class UpdateConfiguracion(Resource):
             exedente = data['exedente']
             valor_consumo_base = data['valor_consumo_base']
             valor_exedente = data['valor_exedente']
+            reconexion = data['reconexion']
             # Buscar configuracion
             configuracion = Configuracion.query.first()
             if configuracion is None:
@@ -151,6 +164,8 @@ class UpdateConfiguracion(Resource):
                 if valor_consumo_base is not None:
                     configuracion.valor_consumo_base = valor_consumo_base
                 if valor_exedente is not None:
+                    configuracion.valor_exedente = valor_exedente
+                if reconexion is not None:
                     configuracion.valor_exedente = valor_exedente
             db.session.commit()
             return {

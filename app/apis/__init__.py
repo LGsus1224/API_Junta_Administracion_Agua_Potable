@@ -2,6 +2,8 @@ from flask import Blueprint
 from app.libs import api
 # Api Namespaces
 from .auth import api as api_auth_ns
+from .administradores import api as api_admins_ns
+from .logs import api as api_logs_ns
 from .general import api as api_general_ns
 from .clientes import api as api_clientes_ns
 from .servicios import api as api_servicios_ns
@@ -21,6 +23,8 @@ sistema de la Junta de Administración de Agua Potable.
 api.init_app(api_bp)
 
 api.add_namespace(api_auth_ns, path='/auth')
+api.add_namespace(api_admins_ns, path='/admin')
+api.add_namespace(api_logs_ns, path='/logs')
 api.add_namespace(api_general_ns, path='/general')
 api.add_namespace(api_clientes_ns, path='/clientes')
 api.add_namespace(api_servicios_ns, path='/servicios')

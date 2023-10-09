@@ -1,5 +1,5 @@
 from flask_restx import Namespace,Resource,fields,abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import extract
 from app.libs import db
 from app.models import Planillas,Servicios,Configuracion
@@ -8,6 +8,8 @@ from app.common.api_utils import (
     error_message,
     item_planilla
 )
+from app.common.logs import LogsServices
+from app.common.enums import logsCategories
 from datetime import datetime
 
 
@@ -377,6 +379,7 @@ class DeletePlanilla(Resource):
                 planilla.servicio.lectura_anterior = planilla.lectura_anterior
             db.session.delete(planilla)
             db.session.commit()
+            LogsServices(db.session).new_log(logsCategories.planilla_deleted, current_user.id)
             return {
                 'success':'Planilla de pago eliminada'
             },200

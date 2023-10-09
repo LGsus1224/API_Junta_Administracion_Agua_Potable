@@ -1,5 +1,5 @@
 from flask_restx import Namespace,Resource,fields,abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 from sqlalchemy import extract
 from app.libs import db
 from app.common.api_utils import (
@@ -11,6 +11,8 @@ from app.common.api_utils import (
     is_not_null_empty
 )
 from app.models import Clientes,Servicios,Planillas
+from app.common.logs import LogsServices
+from app.common.enums import logsCategories
 from datetime import datetime
 
 
@@ -243,6 +245,7 @@ class NewServicio(Resource):
             new_servicio.lectura_anterior = lectura_anterior
             db.session.add(new_servicio)
             db.session.commit()
+            LogsServices(db.session).new_log(logsCategories.servicio_created, current_user.id)
             return {
                 'success':'Servicio creado'
             },201
@@ -404,6 +407,7 @@ class DeleteServicio(Resource):
             if servicio is None: raise Exception('No existe el servicio buscado')
             db.session.delete(servicio)
             db.session.commit()
+            LogsServices(db.session).new_log(logsCategories.servicio_deleted, current_user.id)
             return {
                 'success':'Servicio eliminado'
             },200

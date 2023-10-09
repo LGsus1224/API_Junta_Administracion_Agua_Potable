@@ -1,6 +1,8 @@
 from flask_restx import Namespace,Resource,fields,abort
 from flask_login import login_user,login_required,logout_user
-from app.models import Usuarios
+from app.libs import db
+from app.models import Usuarios,Logs
+from app.common.enums import logsCategories
 
 
 api = Namespace('Acceso y Autenticación', description='Endpoints para el acceso al sistema, autneticación y servicios relacionados')
@@ -43,10 +45,16 @@ class SignIn(Resource):
             if not user.check_password(user.password,password):
                 raise Exception("Usuario o contraseña incorrecta")
             login_user(user)
+            new_log = Logs()
+            new_log.id_usuario = user.id
+            new_log.categoria = logsCategories.login
+            db.session.add(new_log)
+            db.session.commit()
             return {
                 'success':'Inicio de sesión exitoso'
             },200
         except Exception as e:
+            db.session.rollback()
             abort(400, error='No se pudo iniciar la sesión: '+str(e))
 
 
