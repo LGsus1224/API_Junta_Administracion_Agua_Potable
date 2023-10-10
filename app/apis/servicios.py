@@ -10,9 +10,9 @@ from app.common.api_utils import (
     nullable,
     is_not_null_empty
 )
-from app.models import Clientes,Servicios,Planillas
+from app.models import Clientes,Servicios,Planillas,PagosConexion,Configuracion
 from app.common.logs import LogsServices
-from app.common.enums import logsCategories
+from app.common.enums import logsCategories,conexionEnums
 from datetime import datetime
 
 
@@ -58,6 +58,12 @@ class GetAllServicios(Resource):
             readonly = True,
             title = 'Estado de verificación de pago',
             description = 'Estado de verificación de pago de planilla del servicio en el mes actual'
+        ),
+        'financiamiento_conexion': fields.String(
+            readonly = True,
+            title = 'Tipo pago de conexion',
+            description = 'Tipo de pago realizado por la conexion del servicio',
+            choices=['contado', 'financiamiento']
         )
     })
 
@@ -74,12 +80,18 @@ class GetAllServicios(Resource):
             results = []
             current_date = datetime.now()
             for servicio in servicios:
+                # contar el numero de planillas emitidas en el mes en curso
                 planillas = Planillas.query.filter(
                     Planillas.id_servicio == servicio.id,
                     extract('month',Planillas.fecha_emision) == current_date.month,
                     extract('year', Planillas.fecha_emision) == current_date.year
                 ).count()
-                emitido = True if planillas > 0 else False
+                emitido = True if planillas > 0 else False # verificar si se han emitido planillas en el mes actual
+                # Revisar servicio por financiamiento
+                financiamiento_conexion = PagosConexion.query.filter(
+                    PagosConexion.id_servicio == servicio.id,
+                    PagosConexion.tipo == conexionEnums.financiamiento
+                ).first()
                 results.append({
                     'id':servicio.id,
                     'cliente':{
@@ -94,7 +106,8 @@ class GetAllServicios(Resource):
                     'direccion':servicio.direccion,
                     'estado':servicio.estado,
                     'lectura_anterior':servicio.lectura_anterior,
-                    'planilla_actual_emitida':emitido
+                    'planilla_actual_emitida':emitido,
+                    'financiamiento_conexion': True if financiamiento_conexion is not None else False
                 })
             return {'success':results},200
         except Exception:
@@ -211,6 +224,16 @@ class NewServicio(Resource):
             title = 'Lectura anterior',
             description = 'Lectura anterior que indica el medidor',
             min=0
+        ),
+        'contado_conexion':fields.Boolean(
+            required = True,
+            title = 'Pago conexión al contado',
+            description = 'Pago conexión al contado'
+        ),
+        'financiamiento_conexion':fields.Boolean(
+            required = True,
+            title = 'Pago conexión por financiamiento',
+            description = 'Pago conexión al contado'
         )
     })
 
@@ -232,6 +255,11 @@ class NewServicio(Resource):
             direccion = data['direccion']
             estado = data['estado']
             lectura_anterior = data['lectura_anterior']
+            contado_conexion = data['contado_conexion']
+            financiamiento_conexion = data['financiamiento_conexion']
+            # comparar opciones de conexion
+            if contado_conexion and financiamiento_conexion:
+                raise Exception('Pago por conexion no comprensible')
             # Buscar id_cliente
             cliente = Clientes.query.get(id_cliente)
             if cliente is None: raise Exception()
@@ -244,14 +272,32 @@ class NewServicio(Resource):
             new_servicio.estado = estado
             new_servicio.lectura_anterior = lectura_anterior
             db.session.add(new_servicio)
+            db.session.flush()
+            current_datetime = datetime.now()
+            if contado_conexion:
+                new_pago_conexion = PagosConexion()
+                new_pago_conexion.tipo = conexionEnums.contado
+                new_pago_conexion.id_servicio = new_servicio.id
+                new_pago_conexion.fecha_emision = current_datetime
+                new_pago_conexion.total = 250
+                new_pago_conexion.entrada = 250
+                db.session.add(new_pago_conexion)
+            elif financiamiento_conexion:
+                new_pago_conexion = PagosConexion()
+                new_pago_conexion.tipo = conexionEnums.financiamiento
+                new_pago_conexion.id_servicio = new_servicio.id
+                new_pago_conexion.fecha_emision = current_datetime
+                new_pago_conexion.total = 250
+                new_pago_conexion.entrada = 100
+                db.session.add(new_pago_conexion)
             db.session.commit()
             LogsServices(db.session).new_log(logsCategories.servicio_created, current_user.id)
             return {
                 'success':'Servicio creado'
             },201
-        except Exception:
+        except Exception as e:
             db.session.rollback()
-            abort(400, error='No fue posible registrar el servicio')
+            abort(400, error='No fue posible registrar el servicio: '+str(e))
 
 
 # ------------------------------------ UPDATE -------------------------------------
@@ -380,6 +426,15 @@ class UpdateServicioEstado(Resource):
             servicio = Servicios.query.get(id_servicio)
             if servicio is None:
                 raise Exception('No existe el servicio buscado')
+            if estado and not servicio.estado:
+                configuracion: Configuracion = Configuracion.query.first()
+                new_pago_reconexion = PagosConexion()
+                new_pago_reconexion.tipo = conexionEnums.reconexion
+                new_pago_reconexion.id_servicio = servicio.id
+                new_pago_reconexion.fecha_emision = datetime.now()
+                new_pago_reconexion.total = configuracion.reconexion
+                new_pago_reconexion.entrada = configuracion.reconexion
+                db.session.add(new_pago_reconexion)
             servicio.estado = estado
             db.session.commit()
             return {

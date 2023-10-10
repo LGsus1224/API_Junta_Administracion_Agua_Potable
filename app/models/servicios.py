@@ -11,6 +11,7 @@ class Servicios(db.Model):
     estado = db.Column(db.Boolean, nullable=False, default=1)
     lectura_anterior = db.Column(db.Integer, nullable=False)
     mis_planillas = db.relationship('Planillas', backref='servicio', cascade='all, delete-orphan', lazy=True)
+    pagos = db.relationship('PagosConexion', backref='servicio', cascade='all, delete-orphan')
 
     def __init__(self):
         super().__init__()
