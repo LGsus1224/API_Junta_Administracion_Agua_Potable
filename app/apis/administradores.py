@@ -4,7 +4,8 @@ from app.libs import db
 from app.models import Usuarios
 from app.common.api_utils import (
     error_message,
-    success_message
+    success_message,
+    is_not_null_empty
 )
 
 
@@ -22,7 +23,7 @@ class GetAdminAll(Resource):
         Lista de administradores del sistema
         """
         try:
-            admins = db.session.query(Usuarios).all()
+            admins = db.session.query(Usuarios).filter(Usuarios.id != 1).all()
             results = []
             for item in admins:
                 results.append({
@@ -67,6 +68,10 @@ class NewAdmin(Resource):
             username = data['username']
             password = data['password']
             new_user = Usuarios()
+            if not is_not_null_empty(username):
+                raise Exception('Nombre de usuario vacio')
+            if not is_not_null_empty(password):
+                raise Exception('Contraseña vacia')
             new_user.username = username
             new_user.password = new_user.hash_password(password)
             db.session.add(new_user)
@@ -77,6 +82,7 @@ class NewAdmin(Resource):
             abort(code=400, error='No fue posible registrar al admin')
 
 
+# -------------------------------------- PUT ------------------------------------------
 @api.route('/reset/password')
 class ResetPassword(Resource):
     reset_password = api.model('ResetPassword',{
@@ -104,6 +110,10 @@ class ResetPassword(Resource):
             data = api.payload
             id_user = data['id_user']
             new_password = data['new_password']
+            if id_user == 1:
+                raise Exception('Superadmin no es editable')
+            if not is_not_null_empty(new_password):
+                raise Exception('Contraseña vacia')
             # revisar si el id de usuario no es del current_user
             if id_user == current_user.id:
                 raise Exception('Usuario de la sesion actual')
@@ -131,6 +141,8 @@ class DeleteAdmin(Resource):
         """
         try:
             # buscar usuario
+            if id_admin == 1:
+                raise Exception('Superadmin no es borrable')
             admin = db.session.query(Usuarios).get(id_admin)
             if admin is None:
                 raise Exception('Usuario no encontrado')

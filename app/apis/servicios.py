@@ -136,6 +136,10 @@ class GetServiciosCliente(Resource):
             servicios = Servicios.query.filter_by(id_cliente=id_cliente).all()
             results = []
             for item in servicios:
+                financiamiento_conexion = PagosConexion.query.filter(
+                    PagosConexion.id_servicio == item.id,
+                    PagosConexion.tipo == conexionEnums.financiamiento
+                ).first()
                 results.append({
                     'id':item.id,
                     'n_conexion':item.n_conexion,
@@ -143,7 +147,8 @@ class GetServiciosCliente(Resource):
                     'id_cliente':item.id_cliente,
                     'direccion':item.direccion,
                     'estado':item.estado,
-                    'lectura_anterior':item.lectura_anterior
+                    'lectura_anterior':item.lectura_anterior,
+                    'financiamiento_conexion':True if financiamiento_conexion is not None else False
                 })
             return {
                 'success':results
@@ -171,6 +176,10 @@ class GetServicio(Resource):
             servicio = Servicios.query.get(id_servicio)
             if servicio is None:
                 raise Exception('No existe el servicio buscado')
+            financiamiento_conexion = PagosConexion.query.filter(
+                PagosConexion.id_servicio == id_servicio,
+                PagosConexion.tipo == conexionEnums.financiamiento
+            ).first()
             results = {
                 'id':servicio.id,
                 'n_conexion':servicio.n_conexion,
@@ -178,7 +187,8 @@ class GetServicio(Resource):
                 'id_cliente':servicio.id_cliente,
                 'direccion':servicio.direccion,
                 'estado':servicio.estado,
-                'lectura_anterior':servicio.lectura_anterior
+                'lectura_anterior':servicio.lectura_anterior,
+                'financiamiento_conexion':True if financiamiento_conexion is not None else False
             }
             return {
                 'success':results

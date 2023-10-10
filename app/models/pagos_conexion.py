@@ -11,12 +11,12 @@ class PagosConexion(db.Model):
     fecha_emision = db.Column(db.DateTime, nullable=False)
     total = db.Column(db.Float, nullable=False)
     entrada = db.Column(db.Float, nullable=False)
-    cuota1 = db.Column(db.Float, nullable=True)
-    cuota2 = db.Column(db.Float, nullable=True)
-    cuota3 = db.Column(db.Float, nullable=True)
-    cuota4 = db.Column(db.Float, nullable=True)
-    cuota5 = db.Column(db.Float, nullable=True)
-    cuota6 = db.Column(db.Float, nullable=True)
+    cuota1 = db.Column(db.Float, nullable=False, default=0)
+    cuota2 = db.Column(db.Float, nullable=False, default=0)
+    cuota3 = db.Column(db.Float, nullable=False, default=0)
+    cuota4 = db.Column(db.Float, nullable=False, default=0)
+    cuota5 = db.Column(db.Float, nullable=False, default=0)
+    cuota6 = db.Column(db.Float, nullable=False, default=0)
 
     def __init__(self):
         super().__init__()
