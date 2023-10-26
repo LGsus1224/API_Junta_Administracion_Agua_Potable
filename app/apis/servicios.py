@@ -404,6 +404,7 @@ class UpdateServicioCliente(Resource):
                 raise Exception('No existe el cliente seleccionado')
             servicio.id_cliente = id_cliente
             db.session.commit()
+            return {'success':'Usuario reasignado'},200
         except Exception as e:
             db.session.rollback()
             abort(400, error='No fue posible reasignar el servicio: ' + str(e))
