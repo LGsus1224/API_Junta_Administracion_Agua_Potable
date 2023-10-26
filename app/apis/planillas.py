@@ -100,7 +100,7 @@ class GetAllPlanillas(Resource):
         try:
             servicio = Servicios.query.get(id_servicio)
             if servicio is None: raise Exception('No existe el servicio buscado')
-            planillas = Planillas.query.filter_by(id_servicio=id_servicio).all()
+            planillas = Planillas.query.filter_by(id_servicio=id_servicio).order_by(Planillas.id.desc()).all()
             results = []
             for item in planillas:
                 results.append({
