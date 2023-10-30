@@ -8,6 +8,9 @@ class logsCategories(enum.Enum):
     servicio_created = 'servicio_created'
     servicio_deleted = 'servicio_deleted'
     planilla_deleted = 'planilla_deleted'
+    notificacion_created = 'notificacion_created'
+    notificacion_deleted = 'notificacion_deleted'
+    notificacion_cobrada = 'notificacion_cobrada'
 
 
 class conexionEnums(enum.Enum):
