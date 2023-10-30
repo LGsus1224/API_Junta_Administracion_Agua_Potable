@@ -1,4 +1,3 @@
-from sqlalchemy import extract
 from sqlalchemy.orm import Session
 from app.models import Logs
 from app.common.enums import logsCategories
@@ -42,7 +41,7 @@ class LogsServices():
     def get_old_logs(self):
         try:
             current_datetime = datetime.datetime.now()
-            old_logs_datetime = current_datetime - datetime.timedelta(4*365/12) # fecha actual menos 6 meses
+            old_logs_datetime = current_datetime - datetime.timedelta(2*365/12) # fecha actual menos 2 meses
             old_logs = self.db.query(Logs).filter(
                 Logs.fecha <= old_logs_datetime
             ).all()

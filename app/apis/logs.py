@@ -2,7 +2,6 @@ from flask_restx import Namespace,Resource,fields,abort
 from flask_login import login_required
 from app.libs import db
 from app.common.logs import LogsServices
-from app.models import Logs
 from app.common.api_utils import (
     error_message,
     success_message
@@ -81,7 +80,7 @@ class DeleteOldLogs(Resource):
     @login_required
     def delete(self):
         """
-        Eliminar logs con más de 4 meses de antiguedad
+        Eliminar logs con más de 2 meses de antiguedad
         """
         try:
             LogsServices(db.session).delete_old_logs()
