@@ -10,6 +10,7 @@ from .servicios import api as api_servicios_ns
 from .planillas import api as api_planillas_ns
 from .configuracion import api as api_config_ns
 from .pagos_conexion import api as api_pagos_conexion_ns
+from .notificaciones import api as api_notificaciones_ns
 
 
 api_bp = Blueprint('api_bp', __name__, url_prefix='/api')
@@ -32,3 +33,4 @@ api.add_namespace(api_servicios_ns, path='/servicios')
 api.add_namespace(api_planillas_ns, path='/planillas')
 api.add_namespace(api_config_ns, path='/configuracion')
 api.add_namespace(api_pagos_conexion_ns, path='/pagos')
+api.add_namespace(api_notificaciones_ns, path='/notificaciones')
