@@ -10,8 +10,9 @@ class Servicios(db.Model):
     direccion = db.Column(db.String(250), nullable=False)
     estado = db.Column(db.Boolean, nullable=False, default=1)
     lectura_anterior = db.Column(db.Integer, nullable=False)
-    mis_planillas = db.relationship('Planillas', backref='servicio', cascade='all, delete-orphan', lazy=True)
-    pagos = db.relationship('PagosConexion', backref='servicio', cascade='all, delete-orphan')
+    mis_planillas = db.relationship('Planillas', backref='servicio', uselist=True, cascade='all, delete-orphan', lazy=True)
+    pagos = db.relationship('PagosConexion', backref='servicio', uselist=True, cascade='all, delete-orphan')
+    notificaciones = db.relationship('Notificaciones', backref='servicio', uselist=True, cascade='all, delete-orphan', lazy=True)
 
     def __init__(self):
         super().__init__()
