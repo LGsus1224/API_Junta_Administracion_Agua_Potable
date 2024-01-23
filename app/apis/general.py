@@ -214,11 +214,12 @@ class GetStatsCobrosConexion(Resource):
                 PagosConexion.tipo == conexionEnums.contado,
                 extract('year', PagosConexion.fecha_emision) == current_date.year
             ).group_by(
-                    extract('month', PagosConexion.fecha_emision)
+                extract('month', PagosConexion.fecha_emision),
+                extract('year', PagosConexion.fecha_emision),
             ).all()
 
             # Crea un diccionario con valor por mes
-            resumen_conexion_contado = total_default_meses
+            resumen_conexion_contado = total_default_meses.copy()
 
             # Actualizar el elemento n del mes en la lista
             for group in total_pagos_conexion_contado:
@@ -229,11 +230,12 @@ class GetStatsCobrosConexion(Resource):
                 PagosConexion.tipo == conexionEnums.financiamiento,
                 extract('year', PagosConexion.fecha_emision) == current_date.year
             ).group_by(
-                    extract('month', PagosConexion.fecha_emision)
+                extract('month', PagosConexion.fecha_emision),
+                extract('year', PagosConexion.fecha_emision),
             ).all()
 
             # Crea un diccionario con valor por mes
-            resumen_conexion_financiamiento = total_default_meses
+            resumen_conexion_financiamiento = total_default_meses.copy()
 
             # Actualizar el elemento n del mes en la lista
             for group in total_pagos_conexion_financiamiento:
@@ -241,14 +243,15 @@ class GetStatsCobrosConexion(Resource):
 
             # Consultar el total de pagos de conexion por reconexion
             total_pagos_reconexion = db.session.query(*query_labels).filter(
-                PagosConexion.tipo == conexionEnums.reconexion,
+                PagosConexion.tipo == conexionEnums.reconexion.value,
                 extract('year', PagosConexion.fecha_emision) == current_date.year
             ).group_by(
-                    extract('month', PagosConexion.fecha_emision)
+                extract('month', PagosConexion.fecha_emision),
+                extract('year', PagosConexion.fecha_emision),
             ).all()
 
             # Crea un diccionario con valor por mes
-            resumen_reconexion = total_default_meses
+            resumen_reconexion = total_default_meses.copy()
 
             # Actualizar el elemento n del mes en la lista
             for group in total_pagos_reconexion:
