@@ -134,14 +134,13 @@ class GetStatsCobrosPlanilla(Resource):
             fields.Integer,
             readonly = True,
             title = 'Total recaudado en la semana',
-            default=[0 for i in range(7)]
+            default=[0 for i in range(6)]
         ),
         'mes':fields.List(
             fields.Integer,
             readonly = True,
             title = 'Total recaudado en el año',
-            default = [0 for i in range(13)]
-
+            default = [0 for i in range(12)]
         )
     })
 
@@ -174,7 +173,7 @@ class GetStatsCobrosPlanilla(Resource):
             planillas_meses: list[Planillas] = Planillas.query.filter(
                 extract('year',Planillas.fecha_emision) == current_date.year
             ).all()
-            resumen_meses = [0 for i in range(13)]
+            resumen_meses = [0 for i in range(12)]
             for pm in planillas_meses:
                 resumen_meses[pm.fecha_emision.month-1] += pm.valor_consumo_total
             # Response
